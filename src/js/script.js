@@ -1014,7 +1014,7 @@ async function getAIResponse(message) {
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
-                'Authorization': 'Bearer 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',
+                'Authorization': 'Bearer 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',
                 'HTTP-Referer': 'motivebuddy.netlify.app',
                 'X-Title': 'MotiveBuddy',
                 'Content-Type': 'application/json'
