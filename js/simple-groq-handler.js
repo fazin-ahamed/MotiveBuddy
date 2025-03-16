@@ -39,7 +39,7 @@ window.apiHandler = {
 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
   console.log("%cSimple Groq API Setup", "font-size: 16px; font-weight: bold; color: blue;");
   console.log("%cTo set your Groq API key, run:", "font-weight: bold;");
-  console.log("%capiHandler.setGroqKey('your-groq-api-key-here')", "background-color: #f0f0f0; padding: 5px; border-radius: 3px;");
+  console.log("%capiHandler.setGroqKey('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')", "background-color: #f0f0f0; padding: 5px; border-radius: 3px;");
   
   // Add test function
   window.testGroqKey = function() {
