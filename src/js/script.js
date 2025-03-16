@@ -1011,10 +1011,13 @@ async function getAIResponse(message) {
         
         console.log("Sending request to OpenRouter API with message:", message);
         
+        // Get the API key from config or fall back to a placeholder (will be replaced at build time)
+        const apiKey = window.apiConfig ? window.apiConfig.OPENROUTER_API_KEY : 'API_KEY_PLACEHOLDER';
+        
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
-                'Authorization': 'Bearer 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',
+                'Authorization': `Bearer ${apiKey}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
