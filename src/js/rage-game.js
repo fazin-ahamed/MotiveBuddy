@@ -3,7 +3,7 @@ const stopGameButton = document.querySelector('.stop-game-button');
 const secretHint = document.querySelector('.secret-hint');
 let clickCount = 0;
 let lastMoveTime = 0;
-let gameStartTime = Date.now();
+let requiredClicks = 20; // Changed from time-based to click-based (20 clicks needed)
 let gameTimer;
 let canMove = true;
 
@@ -29,8 +29,8 @@ document.addEventListener('DOMContentLoaded', function() {
         console.warn("Could not find rage game element");
     }
     
-    // Only start the game timer if the game hasn't been completed
-    startGameTimer();
+    // Update the click counter display initially
+    updateClickDisplay();
     
     // Position the button initially
     if (rageGameButton) {
@@ -42,26 +42,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Start the 20-second timer when the page loads
-function startGameTimer() {
-    gameStartTime = Date.now();
-    updateTimerDisplay();
-    
-    gameTimer = setInterval(() => {
-        updateTimerDisplay();
-        
-        // Check if 20 seconds have passed
-        if (Date.now() - gameStartTime >= 20000) {
-            clearInterval(gameTimer);
-            completeRageGame();
-        }
-    }, 1000);
-}
-
-// Update the timer display
-function updateTimerDisplay() {
-    const secondsLeft = Math.max(0, 20 - Math.floor((Date.now() - gameStartTime) / 1000));
-    secretHint.textContent = `Time left: ${secondsLeft} seconds...`;
+// Update the click counter display
+function updateClickDisplay() {
+    const clicksLeft = Math.max(0, requiredClicks - clickCount);
+    secretHint.textContent = `Clicks left: ${clicksLeft} clicks...`;
 }
 
 function moveButton() {
@@ -129,14 +113,19 @@ if (rageGameButton) {
         canMove = false;
         clickCount++;
         
+        // Update display with new click count
+        updateClickDisplay();
+        
         const speech = new SpeechSynthesisUtterance(`You got ${clickCount} click${clickCount === 1 ? '' : 's'}! Impressive... NOT!`);
         window.speechSynthesis.speak(speech);
         
         // Re-enable movement after a short delay
         setTimeout(() => { canMove = true; }, 800);
         
-        // If user manages to click the button, congratulate and redirect
-        completeRageGame();
+        // If user manages to click the button 20 times, complete the game
+        if (clickCount >= requiredClicks) {
+            completeRageGame();
+        }
     });
 }
 
@@ -160,8 +149,10 @@ if (stopGameButton) {
 
 // Function to complete the rage game and redirect
 function completeRageGame() {
-    clearInterval(gameTimer);
-    const speech = new SpeechSynthesisUtterance('You clicked the rage bait! Now you can interact with the demotivational buddy.');
+    if (gameTimer) {
+        clearInterval(gameTimer);
+    }
+    const speech = new SpeechSynthesisUtterance('You clicked the rage bait 20 times! Now you can interact with the demotivational buddy.');
     window.speechSynthesis.speak(speech);
     
     // Set cookie to remember the game was completed - use secure settings
