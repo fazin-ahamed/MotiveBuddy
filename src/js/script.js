@@ -996,7 +996,7 @@ async function getAIResponse(message) {
     // Check for network connectivity
     if (!navigator.onLine) {
         console.log("No internet connection detected, using offline mode");
-        const offlineResponse = getOfflineResponse(message);
+        const offlineResponse = getBotResponse(message);
         content.textContent = offlineResponse;
         speakText(offlineResponse, 'unfriendly');
         return;
@@ -1012,10 +1012,12 @@ async function getAIResponse(message) {
         console.log("Sending request to OpenRouter API with message:", message);
         
         // Get the API key from process.env (for server-side) or window.env (for client-side)
-        const apiKey = window.env ? window.env.OPENROUTER_API_KEY : (process.env ? process.env.OPENROUTER_API_KEY : null);
-        
+        const apiKey = window.env ? window.env.OPENROUTER_API_KEY : 
+                      (process.env ? process.env.OPENROUTER_API_KEY : 
+                       localStorage.getItem('OPENROUTER_API_KEY'));
+                       
         if (!apiKey) {
-            console.error("API key not found. Please check your environment configuration.");
+            console.warn("API key not found. Using offline responses.");
             throw new Error("API key not configured");
         }
         
@@ -1023,7 +1025,9 @@ async function getAIResponse(message) {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                // Add a timeout header if the API supports it
+                'X-Request-Timeout': '8000'
             },
             body: JSON.stringify({
                 model: 'meta-llama/llama-3.3-70b-instruct:free',
@@ -1036,15 +1040,23 @@ async function getAIResponse(message) {
                         role: 'user',
                         content: message
                     }
-                ]
+                ],
+                // Add a timeout to prevent hanging requests
+                timeout: 8000
             })
         });
 
         if (!response.ok) {
-            throw new Error(`API response: ${response.status} ${response.statusText}`);
+            console.error(`API response error: ${response.status} ${response.statusText}`);
+            throw new Error(`API returned status code ${response.status}`);
         }
 
         const data = await response.json();
+        if (!data.choices || data.choices.length === 0) {
+            console.error("API returned empty response", data);
+            throw new Error("Invalid response from API");
+        }
+        
         const aiResponse = data.choices[0].message.content;
         
         // Determine TTS emotion based on response content
@@ -1055,13 +1067,26 @@ async function getAIResponse(message) {
     } catch (error) {
         console.error('Error communicating with AI API:', error.message);
         
-        // Don't expose full error details in UI for security
-        content.textContent = "Error communicating with the AI service. Using offline mode instead.";
+        // Provide more informative message based on error type
+        let errorMessage = "Using my offline brain because the AI servers are being temperamental.";
         
-        // Fallback to local responses
-        const aiResponse = getOfflineResponse(message);
-        content.textContent = aiResponse;
-        speakText(aiResponse, 'unfriendly');
+        if (error.message.includes("API key")) {
+            errorMessage = "API key not found. Using my built-in rudeness instead.";
+        } else if (error.message.includes("status code 429")) {
+            errorMessage = "The AI servers are overwhelmed by your mediocrity. Using offline mode.";
+        } else if (error.message.includes("status code 5")) {
+            errorMessage = "The AI servers crashed trying to process your request. Using offline mode.";
+        }
+        
+        content.textContent = errorMessage;
+        
+        // Show error briefly, then provide fallback response
+        setTimeout(() => {
+            // Fallback to local responses
+            const aiResponse = getOfflineResponse(message);
+            content.textContent = aiResponse;
+            speakText(aiResponse, 'unfriendly');
+        }, 1200);
     }
 }
 
@@ -1092,15 +1117,15 @@ function getOfflineResponse(message) {
     // Select based on aspects of the message to seem more responsive
     let responseIndex = Math.floor(Math.random() * offlineResponses.length);
     
-    // Try to be a bit context-aware even offline
+    // Make response selection text-aware even offline
     if (message.includes('help')) {
-        responseIndex = 6;
-    } else if (message.includes('why') || message.includes('how')) {
         responseIndex = 2;
     } else if (message.length < 10) {
         responseIndex = 9;
     } else if (message.includes('thanks') || message.includes('thank you')) {
         responseIndex = 7;
+    } else if (message.includes('not working')) {
+        responseIndex = 4;
     }
     
     return offlineResponses[responseIndex];
@@ -1279,13 +1304,13 @@ function moveButton() {
     const gameArea = rageGameSection;
     const gameAreaRect = gameArea.getBoundingClientRect();
     const buttonRect = startGameButton.getBoundingClientRect();
-
+    
     const maxX = gameAreaRect.width - buttonRect.width - 20;
     const maxY = gameAreaRect.height - buttonRect.height - 20;
-
+    
     const randomX = Math.max(0, Math.floor(Math.random() * maxX));
     const randomY = Math.max(0, Math.floor(Math.random() * (maxY - 50)));
-
+    
     startGameButton.style.position = 'relative';
     startGameButton.style.left = `${randomX}px`;
     startGameButton.style.top = `${randomY}px`;
@@ -1339,7 +1364,7 @@ function completeGame() {
         
         // Celebratory but demotivational message
         readOutLoud("Congratulations on beating such an easy game. I guess you want to talk to me now. Go ahead, click the talk button if you must.");
-        
+            
         // Redirect to the main page after a delay
         setTimeout(() => {
             window.location.href = 'index.html';
