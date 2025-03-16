@@ -29,6 +29,13 @@
                 networkStatus.textContent = 'Offline mode - crushing your dreams in low quality';
             }
         });
+        
+        // Add immediate check for game completion to redirect faster
+        console.log("Index page loading - checking for completion cookie");
+        if (!document.cookie.includes("rageGameCompleted=true")) {
+            console.log("Game not completed, redirecting to rage-game.html");
+            window.location.href = 'rage-game.html';
+        }
     </script>
 </head>
 <body>
@@ -36,7 +43,7 @@
         <a href="#" class="logo"><img src="img/MotiveBuddy.png" alt="Motivational Buddy Logo"></a>
     </header>
 
-    <section class="rage-bait-game" id="rage-game">
+    <section class="rage-bait-game" id="rage-game" style="display: none;">
         <h2>The Unmotivational Game</h2>
         <p>Click the start button to enter a world of frustration. Do you have what it takes?</p>
         <button id="start-game">Start Game</button>
@@ -45,7 +52,7 @@
         <div id="secret-button" class="secret-bypass">⚡</div>
     </section>
 
-    <section class="about" id="about">
+    <section class="about" id="about" style="display: none;">
         <div class="about-img">
             <img src="img/LogoForScrappy.png" alt="AI Assistant">
         </div>
@@ -64,42 +71,6 @@
             <div id="network-status" class="network-status"></div>
         </div>
     </section>
-
-    <div class="container">
-        <header>
-            <h1>Motivational Buddy</h1>
-            <p>Your not-so-motivational AI companion</p>
-        </header>
-        
-        <div id="gameSection" class="section">
-            <h2>Complete the Rage Bait Game</h2>
-            <div id="game">
-                <!-- Game content will be inserted here by JavaScript -->
-            </div>
-        </div>
-        
-        <div id="buddySection" class="section hidden">
-            <div class="buddy-container">
-                <img src="img/ROBOTFACE.png" alt="Motivational Buddy" class="buddy-image">
-                <div class="speech-bubble">
-                    <p id="response">Complete the game to talk to me...</p>
-                </div>
-            </div>
-            
-            <div class="input-container">
-                <input type="text" id="userInput" placeholder="Talk to your buddy...">
-                <button id="talkButton">Talk</button>
-            </div>
-            
-            <div class="hint">
-                <small>Hint: Try saying "shock the button" for a surprise!</small>
-            </div>
-        </div>
-        
-        <footer>
-            <p>Motivational Buddy App - Using Web Speech API for Voice</p>
-        </footer>
-    </div>
 
     <script type="text/javascript" src="js/script.js"></script>
 </body>

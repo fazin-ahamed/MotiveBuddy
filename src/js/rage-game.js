@@ -10,12 +10,36 @@ let canMove = true;
 // Check for game completion first - if already completed, redirect to index
 document.addEventListener('DOMContentLoaded', function() {
     const hasCompletedGame = document.cookie.includes("rageGameCompleted=true");
+    console.log("Rage game page loaded - game completed status:", hasCompletedGame);
+    
     if (hasCompletedGame) {
         console.log("Game already completed, redirecting to index");
         window.location.href = 'index.html';
         return;
     }
+    
+    console.log("Starting rage game - game not completed yet");
+    
+    // Make sure the rage game is visible and positioned correctly
+    const rageGame = document.querySelector('.rage-game');
+    if (rageGame) {
+        rageGame.style.display = 'flex';
+        console.log("Rage game display set to flex");
+    } else {
+        console.warn("Could not find rage game element");
+    }
+    
+    // Only start the game timer if the game hasn't been completed
     startGameTimer();
+    
+    // Position the button initially
+    if (rageGameButton) {
+        // Initial random position
+        console.log("Setting up rage game button");
+        setTimeout(moveButton, 500);
+    } else {
+        console.warn("Could not find rage game button");
+    }
 });
 
 // Start the 20-second timer when the page loads
@@ -140,7 +164,7 @@ function completeRageGame() {
     const speech = new SpeechSynthesisUtterance('You clicked the rage bait! Now you can interact with the demotivational buddy.');
     window.speechSynthesis.speak(speech);
     
-    // Set cookie to remember the game was completed
+    // Set cookie to remember the game was completed - use secure settings
     document.cookie = "rageGameCompleted=true; path=/; max-age=86400; SameSite=Lax";
     
     // Redirect after the speech finishes

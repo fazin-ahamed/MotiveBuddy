@@ -31,6 +31,7 @@
             border: none;
             border-radius: 5px;
             transition: background 0.3s;
+            z-index: 10; /* Ensure buttons are clickable */
         }
         .rage-game-button:hover, .stop-game-button:hover {
             background: #cc0000;
@@ -38,6 +39,15 @@
         .stop-game-button {
             top: 10px;
             right: 10px;
+        }
+        .secret-hint {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            color: #ff5722;
+            font-size: 14px;
+            opacity: 0.2;
+            text-shadow: 1px 1px #ff0000;
         }
         @keyframes glitch {
             0% { text-shadow: 2px 2px #ff0000; }
@@ -47,6 +57,24 @@
             100% { text-shadow: 2px 2px #ff0000; }
         }
     </style>
+    <script>
+        // Add debugging log to see when page loads
+        console.log("Rage game page loading...");
+        
+        // Check completed game status immediately to prevent flashes of content
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("DOM content loaded in rage-game.html");
+            const hasCompletedGame = document.cookie.includes("rageGameCompleted=true");
+            console.log("Game completion check:", hasCompletedGame);
+            if (hasCompletedGame) {
+                console.log("Game already completed, redirecting to index");
+                window.location.href = 'index.html';
+            } else {
+                console.log("Game not completed, staying on rage game page");
+                document.querySelector('.rage-game').style.display = 'flex';
+            }
+        });
+    </script>
 </head>
 <body>
     <div class="rage-game">

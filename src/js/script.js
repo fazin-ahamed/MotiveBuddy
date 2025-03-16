@@ -55,22 +55,110 @@ function checkGameCompletionStatus() {
     
     if (hasCompletedGame) {
         gameCompleted = true;
-        if(rageGameSection) rageGameSection.style.display = 'none';
-        if(aboutSection) aboutSection.style.display = 'flex';
+        // Explicitly set display properties for better control
+        if(rageGameSection) {
+            rageGameSection.style.display = 'none';
+        }
+        if(aboutSection) {
+            aboutSection.style.display = 'flex';
+        }
+
+        // Remove any game-related elements from display
+        const gameElements = document.querySelectorAll('.game-section, .section');
+        gameElements.forEach(el => {
+            if(el.id === 'buddySection') {
+                el.classList.remove('hidden');
+            } else if(el.id === 'gameSection') {
+                el.classList.add('hidden');
+            }
+        });
     } else {
-        if(rageGameSection) rageGameSection.style.display = 'block';
-        if(aboutSection) aboutSection.style.display = 'none';
+        // If game not completed, redirect to rage-game.html from index
+        const isIndexPage = window.location.pathname.endsWith('index.html') || 
+                           window.location.pathname === '/' || 
+                           window.location.pathname === '';
+        const isRageGamePage = window.location.pathname.endsWith('rage-game.html');
         
-        // If we're on index.html but the game hasn't been completed, redirect to rage-game.html
-        if(window.location.pathname.endsWith('index.html') || window.location.pathname === '/' || window.location.pathname === '') {
+        if(isIndexPage && !isRageGamePage) {
             console.log("Redirecting to rage game because game not completed yet");
             window.location.href = 'rage-game.html';
+            return; // Stop execution after redirect
+        }
+
+        // On the rage game page, ensure sections are shown properly
+        if(isRageGamePage) {
+            // Make sure rage game is visible on the rage game page
+            if(rageGameSection) {
+                rageGameSection.style.display = 'block';
+            }
+            if(aboutSection) {
+                aboutSection.style.display = 'none';
+            }
+            return; // Stop further processing
+        }
+
+        // Default fallback for other pages when game not completed
+        if(rageGameSection) {
+            rageGameSection.style.display = 'block';
+        }
+        if(aboutSection) {
+            aboutSection.style.display = 'none';
         }
     }
 }
 
 // Initialize section visibility on page load
-document.addEventListener('DOMContentLoaded', checkGameCompletionStatus);
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM loaded - checking game status");
+    checkGameCompletionStatus();
+    
+    // Only proceed with assistant initializations if we're on index and game is completed
+    const isRageGamePage = window.location.pathname.endsWith('rage-game.html');
+    const isIndexPage = window.location.pathname.endsWith('index.html') || 
+                        window.location.pathname === '/' || 
+                        window.location.pathname === '';
+    
+    if (isIndexPage && gameCompleted) {
+        console.log("Showing assistant section - game was previously completed");
+        
+        // Double-check the display settings to make sure they're applied
+        if(rageGameSection) rageGameSection.style.display = 'none';
+        if(aboutSection) aboutSection.style.display = 'flex';
+        
+        // Initialize speech recognition
+        if (!initializeSpeechRecognition()) {
+            console.warn("Initial speech recognition setup failed, will retry when needed");
+        }
+        
+        // Add notification about microphone permission
+        if (navigator.permissions) {
+            navigator.permissions.query({ name: 'microphone' }).then(permissionStatus => {
+                if (permissionStatus.state === 'prompt') {
+                    content.textContent = "You'll need to allow microphone access when prompted to use voice input.";
+                } else if (permissionStatus.state === 'denied') {
+                    content.textContent = "Microphone access is blocked. Please enable it in your browser settings to use voice input.";
+                }
+                
+                permissionStatus.onchange = function() {
+                    if (this.state === 'granted') {
+                        content.textContent = "Microphone access granted! Click 'Talk to Me' to start.";
+                        retryVoiceRecognition();
+                    }
+                };
+            }).catch(e => {
+                console.log("Could not check microphone permission:", e);
+            });
+        }
+    }
+    
+    // Force-check visibility one more time for robustness
+    if (gameCompleted) {
+        if(rageGameSection) rageGameSection.style.display = 'none';
+        if(aboutSection) aboutSection.style.display = 'flex';
+    }
+
+    // ...existing Bluetooth status code...
+});
 
 // Function to analyze sentiment in text
 function analyzeSentiment(text) {
@@ -112,6 +200,18 @@ function speakText(text, emotion) {
     return;
   }
   
+  // Try to use Microsoft Azure if available for better slang support
+  if (navigator.onLine && 
+     (text.toLowerCase().includes('bruh') || 
+      text.toLowerCase().includes('lol') || 
+      text.toLowerCase().includes('omg') || 
+      text.toLowerCase().includes('wtf') || 
+      Math.random() < 0.3)) { // 30% chance to use Azure for variety
+    speakTextAzure(text, emotion);
+    return;
+  }
+  
+  // Fallback to Web Speech API
   // Cancel any ongoing speech
   synth.cancel();
   
@@ -138,6 +238,88 @@ function speakText(text, emotion) {
   
   // Speak the text
   synth.speak(utterance);
+}
+
+// Microsoft Azure Text-to-Speech with emotion support
+function speakTextAzure(text, emotion) {
+    // Check if Microsoft Cognitive Services Speech SDK is available
+    if (window.SpeechSDK) {
+        try {
+            console.log("Using Microsoft Azure TTS for better slang pronunciation");
+            const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(
+                "36c0bbb483ba4c35acc125792c81c9d8", // Example key, replace with environment variable or secure storage
+                "eastus" // Example region
+            );
+            
+            // Configure voice based on emotion
+            let voiceName = "en-US-AriaNeural";
+            let style = "friendly";
+            
+            switch(emotion) {
+                case 'cheerful':
+                    style = "cheerful";
+                    break;
+                case 'sad':
+                    style = "sad";
+                    break;
+                case 'angry':
+                    style = "angry";
+                    break;
+                case 'fearful':
+                    style = "terrified";
+                    break;
+                case 'unfriendly':
+                    style = "unfriendly";
+                    break;
+                default:
+                    style = "chat";
+            }
+            
+            // SSML for neural voices with style control
+            const ssml = `
+                <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" xml:lang="en-US">
+                    <voice name="${voiceName}">
+                        <mstts:express-as style="${style}" styledegree="2">
+                            ${text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')}
+                        </mstts:express-as>
+                    </voice>
+                </speak>
+            `;
+            
+            // Create the audio config and synthesizer
+            const audioConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
+            const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, audioConfig);
+            
+            // Speak the text with SSML
+            synthesizer.speakSsmlAsync(
+                ssml,
+                result => {
+                    console.log("Azure TTS completed successfully");
+                    synthesizer.close();
+                },
+                error => {
+                    console.error("Azure TTS error:", error);
+                    synthesizer.close();
+                    // Fallback to browser speech synthesis on error
+                    const fallbackSpeech = new SpeechSynthesisUtterance(text);
+                    window.speechSynthesis.speak(fallbackSpeech);
+                }
+            );
+        } catch (error) {
+            console.error("Error using Azure TTS:", error);
+            // Fallback to browser speech synthesis
+            const fallbackSpeech = new SpeechSynthesisUtterance(text);
+            window.speechSynthesis.speak(fallbackSpeech);
+        }
+    } else {
+        // Microsoft Speech SDK not available, fallback to browser speech synthesis
+        console.log("Microsoft Speech SDK not available, using browser speech synthesis");
+        const fallbackSpeech = new SpeechSynthesisUtterance(text);
+        fallbackSpeech.volume = 1;
+        fallbackSpeech.rate = 1;
+        fallbackSpeech.pitch = 1;
+        window.speechSynthesis.speak(fallbackSpeech);
+    }
 }
 
 // Add Bluetooth variables
@@ -636,32 +818,56 @@ window.addEventListener('online', () => {
 
 // Initialize speech recognition when the page loads
 document.addEventListener('DOMContentLoaded', function() {
+    // First check the page we're on to apply proper initialization
+    const isRageGamePage = window.location.pathname.endsWith('rage-game.html');
+    const isIndexPage = window.location.pathname.endsWith('index.html') || 
+                        window.location.pathname === '/' || 
+                        window.location.pathname === '';
+    
+    // Check game completion status first thing
     checkGameCompletionStatus();
     
-    // Try to initialize speech recognition
-    if (!initializeSpeechRecognition()) {
-        console.warn("Initial speech recognition setup failed, will retry when needed");
+    // Only proceed with assistant initializations if we're on index and game is completed
+    if (isIndexPage && gameCompleted) {
+        console.log("Showing assistant section - game was previously completed");
+        
+        // Double-check the display settings to make sure they're applied
+        if(rageGameSection) rageGameSection.style.display = 'none';
+        if(aboutSection) aboutSection.style.display = 'flex';
+        
+        // Initialize speech recognition
+        if (!initializeSpeechRecognition()) {
+            console.warn("Initial speech recognition setup failed, will retry when needed");
+        }
+        
+        // Add notification about microphone permission
+        if (navigator.permissions) {
+            navigator.permissions.query({ name: 'microphone' }).then(permissionStatus => {
+                if (permissionStatus.state === 'prompt') {
+                    content.textContent = "You'll need to allow microphone access when prompted to use voice input.";
+                } else if (permissionStatus.state === 'denied') {
+                    content.textContent = "Microphone access is blocked. Please enable it in your browser settings to use voice input.";
+                }
+                
+                permissionStatus.onchange = function() {
+                    if (this.state === 'granted') {
+                        content.textContent = "Microphone access granted! Click 'Talk to Me' to start.";
+                        retryVoiceRecognition();
+                    }
+                };
+            }).catch(e => {
+                console.log("Could not check microphone permission:", e);
+            });
+        }
     }
     
-    // Add notification about microphone permission
-    if (gameCompleted && navigator.permissions) {
-        navigator.permissions.query({ name: 'microphone' }).then(permissionStatus => {
-            if (permissionStatus.state === 'prompt') {
-                content.textContent = "You'll need to allow microphone access when prompted to use voice input.";
-            } else if (permissionStatus.state === 'denied') {
-                content.textContent = "Microphone access is blocked. Please enable it in your browser settings to use voice input.";
-            }
-            
-            permissionStatus.onchange = function() {
-                if (this.state === 'granted') {
-                    content.textContent = "Microphone access granted! Click 'Talk to Me' to start.";
-                    retryVoiceRecognition();
-                }
-            };
-        }).catch(e => {
-            console.log("Could not check microphone permission:", e);
-        });
+    // Force-check visibility one more time for robustness
+    if (gameCompleted) {
+        if(rageGameSection) rageGameSection.style.display = 'none';
+        if(aboutSection) aboutSection.style.display = 'flex';
     }
+
+    // ...existing Bluetooth status code...
 });
 
 // Handle talk button click with proper error handling
@@ -808,8 +1014,8 @@ async function getAIResponse(message) {
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
-                'Authorization': 'Bearer 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',
-                'HTTP-Referer': window.location.origin, // Required by OpenRouter
+                'Authorization': 'Bearer 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',
+                'HTTP-Referer': 'motivebuddy.netlify.app',
                 'X-Title': 'MotiveBuddy', // Optional but recommended
                 'Content-Type': 'application/json'
             },
@@ -818,7 +1024,7 @@ async function getAIResponse(message) {
                 messages: [
                     {
                         role: 'system',
-                        content: `You should be very rude and roast and insult the person to whatever they say. Make it short like 40 to 50 words. Also if the user wants you to motivate them then bait them into thinking you are gonna motivate and slowly turn on them and break their morale. Also dont use complicated words and use some modern slang. Also make sure when using words that require more expression make it compatible with text to speech`
+                        content: `You should be very rude and roast and insult the person to whatever they say. Make it short like 40 to 50 words. Also if the user wants you to motivate them then bait them into thinking you are gonna motivate and slowly turn on them and break their morale. Also dont use complicated words and use some modern slang and casual speech patterns like "bruh", "lol", etc., when appropriate. Also make sure when using words that require more expression make it compatible with text to speech and also make sure to not repeat words like bruh again and again`
                     },
                     {
                         role: 'user',
