@@ -25,7 +25,9 @@ jobs:
         run: npm ci
         
       - name: Replace API key in config.js
-        run: sed -i 's/__OPENROUTER_API_KEY__/${{ secrets.OPENROUTER_API_KEY }}/g' src/js/config.js
+        run: |
+          # Use a more secure approach that doesn't expose the key in process output
+          sed -i "s/__OPENROUTER_API_KEY__/$(echo $OPENROUTER_API_KEY | sed 's/[\/&]/\\&/g')/g" src/js/config.js
         
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4

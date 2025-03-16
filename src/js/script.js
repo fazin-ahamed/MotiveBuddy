@@ -864,7 +864,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Force-check visibility one more time for robustness
     if (gameCompleted) {
         if(rageGameSection) rageGameSection.style.display = 'none';
-        if(aboutSection) aboutSection.style.display = 'flex';
+        if(aboutSection) rageGameSection.style.display = 'flex';
     }
 
     // ...existing Bluetooth status code...
@@ -1011,20 +1011,19 @@ async function getAIResponse(message) {
         
         console.log("Sending request to OpenRouter API with message:", message);
         
-        // Get the API key from process.env (for server-side) or window.env (for client-side)
-        const apiKey = window.env ? window.env.OPENROUTER_API_KEY : 
-                      (process.env ? process.env.OPENROUTER_API_KEY : 
-                       localStorage.getItem('OPENROUTER_API_KEY'));
-                       
-        if (!apiKey) {
-            console.warn("API key not found. Using offline responses.");
-            throw new Error("API key not configured");
+        // Check for API credentials using secure handler
+        if (!window.secureAccess || !window.secureAccess.hasCredentials('openrouter')) {
+            console.warn("API credentials not found. Using offline responses.");
+            throw new Error("API credentials not configured");
         }
+        
+        // Get authentication headers securely
+        const authHeaders = window.secureAccess.getAuthHeaders('openrouter');
         
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${apiKey}`,
+                ...authHeaders,
                 'Content-Type': 'application/json',
                 // Add a timeout header if the API supports it
                 'X-Request-Timeout': '8000'

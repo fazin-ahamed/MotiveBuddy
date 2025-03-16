@@ -19,5 +19,11 @@
     window.env.OPENROUTER_API_KEY = placeholder;
   }
   
+  // Dispatch event to notify our secure handler that config is loaded
+  const configLoadedEvent = new CustomEvent('config-loaded', {
+    detail: { config: window.env }
+  });
+  document.dispatchEvent(configLoadedEvent);
+  
   console.log('Environment configuration loaded');
 })();
