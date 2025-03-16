@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Motivational Buddy</title>
+    <link rel="stylesheet" type="text/css" href="css/styleapp.css">
+    <link rel="stylesheet" href="https://unpkg.com/boxicons@latest/css/boxicons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/compromise@latest/builds/compromise.js"></script>
+    <script type="text/javascript" src="js/config.js"></script>
+    
+    <script>
+        window.addEventListener('online', () => {
+            console.log('Network connection restored');
+            document.body.classList.remove('offline-mode');
+            const networkStatus = document.getElementById('network-status');
+            if (networkStatus) {
+                networkStatus.textContent = 'Online mode - ready to definitely motivate your dreams in 4K';
+            }
+        });
+        window.addEventListener('offline', () => {
+            console.log('Network connection lost');
+            document.body.classList.add('offline-mode');
+            const networkStatus = document.getElementById('network-status');
+            if (networkStatus) {
+                networkStatus.textContent = 'Offline mode - motivating your dreams in low quality';
+            }
+        });
+        
+        
+    </script>
+</head>
+<body>
+    <header>
+        <a href="#" class="logo"><img src="img/MotiveBuddy.png" alt="Motivational Buddy Logo"></a>
+    </header>
+
+    <section class="rage-bait-game" id="rage-game" style="display: none;">
+        <h2>The Unmotivational Game</h2>
+        <p>Click the start button to enter a world of frustration. Do you have what it takes?</p>
+        <button id="start-game">Start Game</button>
+        <div id="game-message">Click start to begin your journey to disappointment...</div>
+        <div class="secret-hint">Hint: Try clicking faster and be persistent!</div>
+        <div id="secret-button" class="secret-bypass">⚡</div>
+    </section>
+
+    <section class="about" id="about" style="display: none;">
+        <div class="about-img">
+            <img src="img/LogoForScrappy.png" alt="AI Assistant">
+        </div>
+        <div class="about-text">
+            <h3>Hi! I am MotiveBuddy, A Demotivational AI Assistant.</h3>
+            <h2>I can crush your dreams in seconds!</h2>
+            <button class="talk">Talk to Me</button>
+            <div class="content">What's on your mind? I probably won't care...</div>
+            <div id="text-input-container" style="display:none; margin-top: 15px;">
+                <input type="text" id="text-input" placeholder="Type your message here..." style="width: 70%; padding: 8px;">
+                <button id="send-button" style="padding: 8px; margin-left: 5px;">Send</button>
+            </div>
+            <div class="mic-instructions" style="margin-top: 10px; font-size: 12px; opacity: 0.7;">
+                Click "Talk to Me" and speak after the green pulsing border appears
+            </div>
+            <div id="network-status" class="network-status"></div>
+        </div>
+    </section>
+
+    <script type="text/javascript" src="js/script.js"></script>
+</body>
+</html>

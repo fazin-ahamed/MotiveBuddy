@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rage Game</title>
+    <link rel="stylesheet" href="css/styleapp.css">
+    <style>
+        .rage-game {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            position: relative;
+            background: #000;
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            text-shadow: 2px 2px #ff0000;
+        }
+        .rage-game h1 {
+            font-size: 3em;
+            animation: glitch 1s infinite;
+        }
+        .rage-game-button, .stop-game-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            position: absolute;
+            background: #ff0000;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+            z-index: 10; /* Ensure buttons are clickable */
+        }
+        .rage-game-button:hover, .stop-game-button:hover {
+            background: #cc0000;
+        }
+        .stop-game-button {
+            top: 10px;
+            right: 10px;
+        }
+        .secret-hint {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            color: #ff5722;
+            font-size: 14px;
+            opacity: 0.2;
+            text-shadow: 1px 1px #ff0000;
+        }
+        @keyframes glitch {
+            0% { text-shadow: 2px 2px #ff0000; }
+            25% { text-shadow: -2px -2px #00ff00; }
+            50% { text-shadow: 2px -2px #0000ff; }
+            75% { text-shadow: -2px 2px #ff00ff; }
+            100% { text-shadow: 2px 2px #ff0000; }
+        }
+    </style>
+    <script>
+        // Add debugging log to see when page loads
+        console.log("Rage game page loading...");
+        
+        // Check completed game status immediately to prevent flashes of content
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("DOM content loaded in rage-game.html");
+            const hasCompletedGame = document.cookie.includes("rageGameCompleted=true");
+            console.log("Game completion check:", hasCompletedGame);
+            if (hasCompletedGame) {
+                console.log("Game already completed, redirecting to index");
+                window.location.href = 'index.html';
+            } else {
+                console.log("Game not completed, staying on rage game page");
+                document.querySelector('.rage-game').style.display = 'flex';
+            }
+        });
+    </script>
+</head>
+<body>
+    <div class="rage-game">
+        <h1>Rage Game</h1>
+        <button class="rage-game-button">Click Me</button>
+        <button class="stop-game-button">Stop</button>
+        <div class="secret-hint">Hint: Try clicking faster!</div>
+    </div>
+    <script src="js/rage-game.js"></script>
+</body>
+</html>
