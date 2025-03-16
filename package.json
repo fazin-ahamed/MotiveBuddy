@@ -1,0 +1,30 @@
+{
+  "name": "motivational-buddy-app",
+  "version": "1.0.0",
+  "description": "A web application that discourages motivation and includes a rage bait game before allowing interaction.",
+  "main": "src/index.html",
+  "scripts": {
+    "start": "live-server src",
+    "build": "echo 'Build script not defined yet.'"
+  },
+  "dependencies": {
+    "compromise": "^14.14.4",
+    "dotenv": "^16.4.7",
+    "express": "^4.17.1",
+    "microsoft-cognitiveservices-speech-sdk": "^1.42.0",
+    "node-fetch": "^3.3.2",
+    "socket.io": "^4.0.0"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.0"
+  },
+  "keywords": [
+    "motivation",
+    "rage bait",
+    "arduino",
+    "web application"
+  ],
+  "author": "Fazin Ahamed and Emil Aneesh",
+  "license": "MIT",
+  "type": "module"
+}
