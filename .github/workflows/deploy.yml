@@ -8,6 +8,8 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    env:
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -20,12 +22,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
         
-      - name: Generate config with environment variables
-        run: |
-          echo "// This file is auto-generated during build" > src/js/config.js
-          echo "window.env = {" >> src/js/config.js
-          echo "  OPENROUTER_API_KEY: '${{ secrets.OPENROUTER_API_KEY }}'" >> src/js/config.js
-          echo "};" >> src/js/config.js
+      - name: Replace API key in config.js
+        run: sed -i 's/__OPENROUTER_API_KEY__/${{ secrets.OPENROUTER_API_KEY }}/g' src/js/config.js
         
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
