@@ -1015,8 +1015,6 @@ async function getAIResponse(message) {
             method: 'POST',
             headers: {
                 'Authorization': 'Bearer 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',
-                'HTTP-Referer': 'motivebuddy.netlify.app',
-                'X-Title': 'MotiveBuddy',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
