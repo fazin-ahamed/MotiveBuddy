@@ -51,6 +51,7 @@ Chaotic Improvements are welcome! Please feel free to submit a pull request or o
 1. Create a `.env` file in the root directory with the following variables:
    ```
    OPENROUTER_API_KEY=your_openrouter_api_key_here
+   ```
 
 ### GitHub Deployment
 To securely store your API key for GitHub Pages deployment:
@@ -60,6 +61,14 @@ To securely store your API key for GitHub Pages deployment:
 3. Click on **New repository secret**
 4. Create a secret with the name `OPENROUTER_API_KEY` and your API key as the value
 5. The GitHub Actions workflow will automatically use this secret during deployment
+
+### GitHub Actions Permissions
+To allow GitHub Actions to deploy to GitHub Pages:
+
+1. Go to your repository **Settings** > **Actions** > **General**
+2. Under "Workflow permissions", select **Read and write permissions**
+3. Save your changes
+4. Alternatively, ensure your workflow file includes `permissions: contents: write`
 
 ## License
 This project is licensed under the MIT License.
