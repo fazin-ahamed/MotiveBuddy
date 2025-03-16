@@ -986,7 +986,6 @@ function getRandomDemotivation() {
 }
 
 // AI API integration
-
 async function getAIResponse(message) {
     content.innerHTML = "<span class='thinking'>Thinking</span>";
     
@@ -1011,14 +1010,14 @@ async function getAIResponse(message) {
         
         console.log("Sending request to Groq API with message:", message);
         
-        // Check for API credentials using secure handler
-        if (!window.secureAccess || !window.secureAccess.hasCredentials('groq')) {
-            console.warn("API credentials not found. Using offline responses.");
-            throw new Error("API credentials not configured");
+        // Check for API key using simple handler
+        if (!window.apiHandler || !window.apiHandler.hasGroqKey()) {
+            console.warn("API key not found. Using offline responses.");
+            throw new Error("API key not configured");
         }
         
-        // Get authentication headers securely
-        const authHeaders = window.secureAccess.getAuthHeaders('groq');
+        // Get authentication headers
+        const authHeaders = window.apiHandler.getGroqHeaders();
         
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
@@ -1068,7 +1067,7 @@ async function getAIResponse(message) {
         let errorMessage = "Using my offline brain because the AI servers are being temperamental.";
         
         if (error.message.includes("API key")) {
-            errorMessage = "API key not found. Using my built-in rudeness instead.";
+            errorMessage = "API key not found. Use apiHandler.setGroqKey('your-key') to add your key.";
         } else if (error.message.includes("status code 429")) {
             errorMessage = "The AI servers are overwhelmed by your mediocrity. Using offline mode.";
         } else if (error.message.includes("status code 5")) {

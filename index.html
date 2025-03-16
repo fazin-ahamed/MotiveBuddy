@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Jost:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/compromise@latest/builds/compromise.js"></script>
     <script type="text/javascript" src="js/config.js"></script>
-    <script type="text/javascript" src="js/api-key-handler.js"></script>
+    <script type="text/javascript" src="js/simple-groq-handler.js"></script>
     
     <!-- Developer helper script for API key - Only displays in development environment -->
     <script>
@@ -19,7 +19,7 @@
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             console.log("%cAPI Key Setup Instructions", "font-size: 16px; font-weight: bold; color: blue;");
             console.log("%cTo set an API key for development, open the browser console and run:", "font-weight: bold;");
-            console.log("%csetDevApiKey('your-groq-api-key-here')", "background-color: #f0f0f0; padding: 5px; border-radius: 3px;");
+            console.log("%capiHandler.setGroqKey('your-groq-api-key-here')", "background-color: #f0f0f0; padding: 5px; border-radius: 3px;");
         }
         
         window.addEventListener('online', () => {
