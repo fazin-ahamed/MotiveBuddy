@@ -29,7 +29,7 @@
   }
   
   // For development fallback only - REMOVE IN PRODUCTION
-  window.env.OPENROUTER_API_KEY = 'API_KEY_PLACEHOLDER';
+  window.env.OPENROUTER_API_KEY = 'OPENROUTER_API_KEY';
   
   // Try to load real env variables
   loadEnvironmentVariables();
