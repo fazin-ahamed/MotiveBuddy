@@ -13,7 +13,7 @@
       // Check if we have secure values in localStorage as encrypted data
       if (!localStorage.getItem('secure_credentials')) {
         // If running in development, try to get from environment
-        if (window.env && window.env.OPENROUTER_API_KEY) {
+        if (window.env && window.env.GROQ_API_KEY) {
           // Store securely
           storeSecureCredentials(window.env);
           return true;
@@ -82,16 +82,16 @@
       if (!credentials) {
         console.warn("No credentials found in secure storage");
         // Try direct access as fallback (less secure but helps during development)
-        if (window.env && window.env.OPENROUTER_API_KEY && service === 'openrouter') {
-          return { 'Authorization': `Bearer ${window.env.OPENROUTER_API_KEY}` };
+        if (window.env && window.env.GROQ_API_KEY && service === 'groq') {
+          return { 'Authorization': `Bearer ${window.env.GROQ_API_KEY}` };
         }
         return {};
       }
       
-      if (service === 'openrouter') {
-        // Return authentication headers for OpenRouter
+      if (service === 'groq') {
+        // Return authentication headers for Groq
         return { 
-          'Authorization': `Bearer ${credentials.OPENROUTER_API_KEY}` 
+          'Authorization': `Bearer ${credentials.GROQ_API_KEY}` 
         };
       }
       
@@ -99,9 +99,9 @@
     } catch (e) {
       console.error("Error generating auth headers", e);
       // Emergency fallback for development
-      if (window.env && window.env.OPENROUTER_API_KEY && service === 'openrouter') {
+      if (window.env && window.env.GROQ_API_KEY && service === 'groq') {
         console.warn("Using emergency fallback auth from window.env");
-        return { 'Authorization': `Bearer ${window.env.OPENROUTER_API_KEY}` };
+        return { 'Authorization': `Bearer ${window.env.GROQ_API_KEY}` };
       }
       return {};
     }
@@ -113,20 +113,20 @@
       const credentials = getSecureCredentials();
       if (!credentials) {
         // Try direct access as fallback
-        if (window.env && window.env.OPENROUTER_API_KEY && service === 'openrouter') {
+        if (window.env && window.env.GROQ_API_KEY && service === 'groq') {
           return true;
         }
         return false;
       }
       
-      if (service === 'openrouter') {
-        return !!credentials.OPENROUTER_API_KEY;
+      if (service === 'groq') {
+        return !!credentials.GROQ_API_KEY;
       }
       
       return false;
     } catch (e) {
       // Emergency fallback check for development
-      if (window.env && window.env.OPENROUTER_API_KEY && service === 'openrouter') {
+      if (window.env && window.env.GROQ_API_KEY && service === 'groq') {
         return true;
       }
       return false;
@@ -152,10 +152,10 @@
   // Add helper in development to check if API key is working
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     window.checkApiKey = function() {
-      const hasKey = window.secureAccess.hasCredentials('openrouter');
+      const hasKey = window.secureAccess.hasCredentials('groq');
       console.log(`API key available: ${hasKey}`);
       if (hasKey) {
-        const headers = window.secureAccess.getAuthHeaders('openrouter');
+        const headers = window.secureAccess.getAuthHeaders('groq');
         console.log("Auth headers:", headers);
         return headers && headers.Authorization && headers.Authorization.length > 20;
       }
