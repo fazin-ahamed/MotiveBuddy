@@ -389,3 +389,81 @@ header {
     from { opacity: 0; }
     to { opacity: 1; }
 }
+
+/* Add styling for when the assistant walks away */
+.assistant-away {
+    opacity: 0.5;
+    filter: grayscale(80%);
+    transition: all 0.5s ease;
+}
+
+.content.assistant-away {
+    border-left-color: #999;
+    background-color: rgba(0, 0, 0, 0.4);
+    font-style: italic;
+}
+
+.talk:disabled {
+    background-color: #999;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.talk:disabled:hover {
+    transform: none;
+    background-color: #999;
+    box-shadow: none;
+}
+
+/* Animation for assistant walking away */
+@keyframes walkAway {
+    0% { transform: translateX(0); opacity: 1; }
+    50% { transform: translateX(100px); opacity: 0.5; }
+    100% { transform: translateX(0); opacity: 1; }
+}
+
+.about-img.assistant-away img {
+    animation: walkAway 5s ease;
+}
+
+/* Bluetooth connection styling */
+.bluetooth-status {
+    font-size: 14px;
+    color: #999;
+    margin-top: 10px;
+    font-style: italic;
+}
+
+.bluetooth-status.connected {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+.bluetooth-status.not-supported {
+    color: #ff0000;
+    text-decoration: line-through;
+}
+
+.bluetooth-connect {
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-top: 8px;
+    transition: all 0.3s;
+}
+
+.bluetooth-connect:hover {
+    background-color: #0b7dda;
+    box-shadow: 0 0 10px rgba(33, 150, 243, 0.7);
+}
+
+.bluetooth-connect:disabled {
+    background-color: #cccccc;
+    color: #666666;
+    cursor: not-allowed;
+    box-shadow: none;
+}

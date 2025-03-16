@@ -5,7 +5,7 @@ The Motivational Buddy App is designed to provide a unique and engaging experien
 
 ## Features
 - **Rage Bait Game**: A fun and challenging game that users must complete before interacting with the motivational buddy. Includes secret hints and roasting messages.
-- **AI Assistant**: An interactive AI that responds to user commands and queries.
+- **AI Assistant**: An interactive AI that responds to user commands and queries using the Web Speech API for text-to-speech.
 - **Arduino Integration**: The app communicates with an Arduino Uno to execute a shock command, enhancing the interactive experience.
 - **Secret Bypass**: Hidden shortcuts for users who pay attention to details.
 

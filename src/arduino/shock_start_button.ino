@@ -7,9 +7,9 @@ void loop() {
     char command = Serial.read();
     
     if (command == 'S') {
-      digitalWrite(9, HIGH); // Activate the shock of a life time
-      delay(1000); // Shock timer
-      digitalWrite(9, LOW); // Stop shocking
+      digitalWrite(9, HIGH); // Activate LED indicator
+      delay(1000);          // Timer
+      digitalWrite(9, LOW);  // Turn off LED
     }
   }
 }

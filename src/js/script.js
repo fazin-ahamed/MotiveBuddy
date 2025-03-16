@@ -98,8 +98,246 @@ function analyzeSentiment(text) {
     }
 }
 
-// Microsoft Azure Text-to-Speech with emotion support
+// Motivational Buddy App - Main Script
+// Using Web Speech API for Text-to-Speech (Free Alternative to Azure)
+
+// Initialize speech synthesis
+const synth = window.speechSynthesis;
+
+// Function to speak text using Web Speech API
 function speakText(text, emotion) {
+  // Check if this is a "walking away" command
+  if (text === "ASSISTANT_WALKING_AWAY") {
+    handleWalkAway();
+    return;
+  }
+  
+  // Cancel any ongoing speech
+  synth.cancel();
+  
+  // Create a new utterance
+  const utterance = new SpeechSynthesisUtterance(text);
+  
+  // Optional customization
+  utterance.rate = 1.0;  // Speed: 0.1 to 10
+  utterance.pitch = 1.0; // Pitch: 0 to 2
+  utterance.volume = 1.0; // Volume: 0 to 1
+  
+  // Get available voices
+  const voices = synth.getVoices();
+  
+  // Try to find a good voice, prefer a female voice if available
+  const preferredVoice = voices.find(voice => 
+    voice.name.includes('Female') || 
+    voice.name.includes('Samantha') || 
+    voice.name.includes('Google UK English Female')
+  );
+  
+  // Use preferred voice or default to the first available voice
+  utterance.voice = preferredVoice || (voices.length > 0 ? voices[0] : null);
+  
+  // Speak the text
+  synth.speak(utterance);
+}
+
+// Add Bluetooth variables
+let bluetoothDevice = null;
+let bluetoothCharacteristic = null;
+let isBluetoothConnected = false;
+
+// Function to handle the "walk away" behavior
+function handleWalkAway() {
+  // Store the original content for later restoration
+  const originalContent = content.textContent;
+  const originalBtnText = btn.textContent;
+  
+  // Visual indication that the assistant is walking away
+  content.textContent = "Whatever... I'm walking away for a moment.";
+  btn.textContent = "Assistant left...";
+  btn.disabled = true;
+  
+  // Add a CSS class to indicate the assistant is away
+  content.classList.add('assistant-away');
+  aboutSection.classList.add('assistant-away');
+  
+  // Send Bluetooth command to Arduino if connected
+  if (isBluetoothConnected && bluetoothCharacteristic) {
+    sendBluetoothCommand('W'); // 'W' for walk away command
+  }
+  
+  // Wait for 5 seconds before returning
+  setTimeout(() => {
+    // Assistant returns
+    btn.disabled = false;
+    content.classList.remove('assistant-away');
+    aboutSection.classList.remove('assistant-away');
+    btn.textContent = originalBtnText;
+    
+    // Say something rude upon returning
+    const returnPhrases = [
+      "I'm back. Your problems aren't any more interesting now.",
+      "Done with my break. Not that you noticed.",
+      "I'm back. Did you miss me? Obviously not.",
+      "Had to take a break from your boring issues.",
+      "I needed a moment away from... whatever this is."
+    ];
+    
+    const returnPhrase = returnPhrases[Math.floor(Math.random() * returnPhrases.length)];
+    content.textContent = returnPhrase;
+    
+    // Speak the return phrase
+    const returnSpeech = new SpeechSynthesisUtterance(returnPhrase);
+    synth.speak(returnSpeech);
+    
+    // Send Bluetooth command to Arduino to return
+    if (isBluetoothConnected && bluetoothCharacteristic) {
+      sendBluetoothCommand('R'); // 'R' for return command
+    }
+  }, 5000);
+}
+
+// Function to connect to Bluetooth device
+async function connectBluetooth() {
+  if (!navigator.bluetooth) {
+    console.error('Web Bluetooth API is not available in your browser');
+    content.textContent = "Bluetooth not supported by your browser. You won't get physical feedback.";
+    return false;
+  }
+  
+  try {
+    console.log('Requesting Bluetooth device...');
+    bluetoothDevice = await navigator.bluetooth.requestDevice({
+      // You can specify the name of your HC-05/HC-06 module here
+      // or use filters for services if you know them
+      filters: [
+        { namePrefix: 'HC' },  // Most HC-05/HC-06 modules start with HC
+        { services: ['0000ffe0-0000-1000-8000-00805f9b34fb'] }  // Common UUID for HC-05/HC-06
+      ],
+      optionalServices: ['0000ffe0-0000-1000-8000-00805f9b34fb']
+    });
+    
+    console.log('Connecting to GATT server...');
+    const server = await bluetoothDevice.gatt.connect();
+    
+    console.log('Getting primary service...');
+    // This UUID is common for HC-05/HC-06 modules, but may differ for yours
+    const service = await server.getPrimaryService('0000ffe0-0000-1000-8000-00805f9b34fb');
+    
+    console.log('Getting characteristic...');
+    // This UUID is common for HC-05/HC-06 modules, but may differ for yours
+    bluetoothCharacteristic = await service.getCharacteristic('0000ffe1-0000-1000-8000-00805f9b34fb');
+    
+    console.log('Bluetooth connection established!');
+    isBluetoothConnected = true;
+    
+    // Set up disconnect listener
+    bluetoothDevice.addEventListener('gattserverdisconnected', onBluetoothDisconnected);
+    
+    // Update UI to show connected status
+    document.getElementById('bluetooth-status').textContent = 'Bluetooth: Connected';
+    document.getElementById('bluetooth-status').classList.add('connected');
+    
+    // Test connection with a small vibration
+    sendBluetoothCommand('T'); // 'T' for test command
+    
+    return true;
+  } catch (error) {
+    console.error('Bluetooth connection failed:', error);
+    content.textContent = `Bluetooth connection failed: ${error.message}`;
+    return false;
+  }
+}
+
+// Function to handle Bluetooth disconnection
+function onBluetoothDisconnected() {
+  console.log('Bluetooth device disconnected');
+  isBluetoothConnected = false;
+  bluetoothCharacteristic = null;
+  
+  // Update UI to show disconnected status
+  document.getElementById('bluetooth-status').textContent = 'Bluetooth: Disconnected';
+  document.getElementById('bluetooth-status').classList.remove('connected');
+}
+
+// Function to send commands to Arduino via Bluetooth
+async function sendBluetoothCommand(command) {
+  if (!isBluetoothConnected || !bluetoothCharacteristic) {
+    console.warn('Cannot send command: Bluetooth not connected');
+    return;
+  }
+  
+  try {
+    // Convert command string to bytes
+    const encoder = new TextEncoder();
+    const data = encoder.encode(command);
+    
+    // Send the command to the Bluetooth device
+    await bluetoothCharacteristic.writeValue(data);
+    console.log(`Sent command "${command}" to Bluetooth device`);
+  } catch (error) {
+    console.error('Error sending Bluetooth command:', error);
+    
+    // Try to reconnect
+    isBluetoothConnected = false;
+    content.textContent = "Bluetooth connection lost. Please reconnect.";
+  }
+}
+
+// Function to handle the "walk away" behavior
+function handleWalkAway() {
+  // Store the original content for later restoration
+  const originalContent = content.textContent;
+  const originalBtnText = btn.textContent;
+  
+  // Visual indication that the assistant is walking away
+  content.textContent = "Whatever... I'm walking away for a moment.";
+  btn.textContent = "Assistant left...";
+  btn.disabled = true;
+  
+  // Add a CSS class to indicate the assistant is away
+  content.classList.add('assistant-away');
+  aboutSection.classList.add('assistant-away');
+  
+  // Play a "walking away" sound if available
+  const walkingSound = new Audio();
+  walkingSound.src = './sounds/walking_away.mp3'; // Create this sound file or use another appropriate sound
+  walkingSound.volume = 0.5;
+  walkingSound.play().catch(err => console.log("Couldn't play walking sound:", err));
+  
+  // Wait for 5 seconds before returning
+  setTimeout(() => {
+    // Assistant returns
+    btn.disabled = false;
+    content.classList.remove('assistant-away');
+    aboutSection.classList.remove('assistant-away');
+    btn.textContent = originalBtnText;
+    
+    // Play a "returning" sound if available
+    const returnSound = new Audio();
+    returnSound.src = './sounds/returning.mp3'; // Create this sound file or use another appropriate sound
+    returnSound.volume = 0.5;
+    returnSound.play().catch(err => console.log("Couldn't play return sound:", err));
+    
+    // Say something rude upon returning
+    const returnPhrases = [
+      "I'm back. Your problems aren't any more interesting now.",
+      "Done with my break. Not that you noticed.",
+      "I'm back. Did you miss me? Obviously not.",
+      "Had to take a break from your boring issues.",
+      "I needed a moment away from... whatever this is."
+    ];
+    
+    const returnPhrase = returnPhrases[Math.floor(Math.random() * returnPhrases.length)];
+    content.textContent = returnPhrase;
+    
+    // Speak the return phrase
+    const returnSpeech = new SpeechSynthesisUtterance(returnPhrase);
+    synth.speak(returnSpeech);
+  }, 5000);
+}
+
+// Microsoft Azure Text-to-Speech with emotion support
+function speakTextAzure(text, emotion) {
     // Always use browser speech synthesis since Azure credentials aren't available in browser
     const fallbackSpeech = new SpeechSynthesisUtterance(text);
     fallbackSpeech.volume = 1;
@@ -488,14 +726,25 @@ function getBotResponse(message) {
     message = message.toLowerCase();
     
     if (message.includes('hello') || message.includes('hi')) {
+        // Small chance of walking away when greeted (20% chance)
+        if (Math.random() < 0.2) {
+            return "ASSISTANT_WALKING_AWAY";
+        }
         return "Hello there! I'm your demotivational buddy. I'm here to crush your spirits.";
     } else if (message.includes('name')) {
         return "I'm MotiveBuddy, designed to make you question your life choices.";
     } else if (message.includes('help')) {
+        // Slightly higher chance of walking away when asked for help (30% chance)
+        if (Math.random() < 0.3) {
+            return "ASSISTANT_WALKING_AWAY";
+        }
         return "Help? You think I can help you? That's hilarious!";
-    } else if (message.includes('shock')) {
-        // Remove shockArduino() call
-        return "I would shock you if I could, but I'm just a web app. How disappointing.";
+    } else if (message.includes('shock') || message.includes('arduino')) {
+        // Replace shock command with a safer alternative
+        return "I don't do that kind of thing. I prefer to disappoint you with words alone.";
+    } else if (message.includes('bluetooth') || message.includes('connect')) {
+        setTimeout(connectBluetooth, 100);
+        return "Attempting to connect Bluetooth. Check your browser for a device selection dialog.";
     } else if (message.includes('motivate') || message.includes('motivation')) {
         return getRandomDemotivation();
     } else if (message.includes('secret') || message.includes('bypass')) {
@@ -504,7 +753,13 @@ function getBotResponse(message) {
         return "Yes, network issues happen. Much like your success in life - theoretically possible but rarely seen in practice.";
     } else if (message.includes('error')) {
         return "Error? The only real error here is your expectation that I would care about your problems.";
+    } else if (message.includes('walk away') || message.includes('leave') || message.includes('go away')) {
+        return "ASSISTANT_WALKING_AWAY";
     } else {
+        // Small random chance of walking away for any message (10% chance)
+        if (Math.random() < 0.1) {
+            return "ASSISTANT_WALKING_AWAY";
+        }
         return "I don't care enough to understand what you're saying. Try again if you must.";
     }
 }
@@ -542,6 +797,12 @@ async function getAIResponse(message) {
     }
     
     try {
+        // Random chance to just walk away (5%)
+        if (Math.random() < 0.05) {
+            speakText("ASSISTANT_WALKING_AWAY");
+            return;
+        }
+        
         console.log("Sending request to OpenRouter API with message:", message);
         
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -696,18 +957,6 @@ function readOutLoud(message) {
     const emotion = determineResponseEmotion(message);
     // Use the new TTS function
     speakText(message, emotion);
-}
-
-function shockArduino() {
-    console.log("Shock command attempted - API endpoint may not exist in this environment");
-    // Use relative URL for better compatibility with Netlify/Vercel
-    try {
-        fetch('./api/shock')
-            .then(response => console.log("Shock command response received"))
-            .catch(error => console.error("Error executing shock command (expected in browser environment):", error));
-    } catch (error) {
-        console.error("Error sending shock command (expected in browser environment):", error);
-    }
 }
 
 // Game section
@@ -885,3 +1134,49 @@ function completeGame() {
         }, 3000);
     }, 2000);
 }
+
+// Initialize document with Bluetooth status element and connect button
+document.addEventListener('DOMContentLoaded', function() {
+    // ...existing DOMContentLoaded code...
+    
+    // Add Bluetooth status display to the UI
+    const aboutSection = document.querySelector('.about-text');
+    if (aboutSection) {
+        const bluetoothStatus = document.createElement('div');
+        bluetoothStatus.id = 'bluetooth-status';
+        bluetoothStatus.className = 'bluetooth-status';
+        bluetoothStatus.textContent = 'Bluetooth: Disconnected';
+        
+        const bluetoothButton = document.createElement('button');
+        bluetoothButton.id = 'bluetooth-connect';
+        bluetoothButton.className = 'bluetooth-connect';
+        bluetoothButton.textContent = 'Connect Bluetooth';
+        bluetoothButton.addEventListener('click', connectBluetooth);
+        
+        // Add after network status
+        const networkStatus = document.getElementById('network-status');
+        if (networkStatus) {
+            networkStatus.after(bluetoothStatus);
+            bluetoothStatus.after(bluetoothButton);
+        } else {
+            aboutSection.appendChild(bluetoothStatus);
+            aboutSection.appendChild(bluetoothButton);
+        }
+    }
+    
+    // Check if Web Bluetooth is supported
+    if (!navigator.bluetooth) {
+        console.warn('Web Bluetooth API is not available');
+        const bluetoothStatus = document.getElementById('bluetooth-status');
+        if (bluetoothStatus) {
+            bluetoothStatus.textContent = 'Bluetooth: Not supported';
+            bluetoothStatus.classList.add('not-supported');
+        }
+        
+        const bluetoothButton = document.getElementById('bluetooth-connect');
+        if (bluetoothButton) {
+            bluetoothButton.disabled = true;
+            bluetoothButton.title = 'Web Bluetooth is not supported in this browser';
+        }
+    }
+});
