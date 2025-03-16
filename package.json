@@ -2,9 +2,10 @@
   "name": "motivational-buddy-app",
   "version": "1.0.0",
   "description": "A web application that discourages motivation and includes a rage bait game before allowing interaction.",
-  "main": "src/index.html",
+  "main": "server.js",
   "scripts": {
-    "start": "live-server src",
+    "start": "node server.js",
+    "dev": "nodemon server.js",
     "build": "echo 'Build script not defined yet.'"
   },
   "dependencies": {
@@ -16,7 +17,8 @@
     "socket.io": "^4.0.0"
   },
   "devDependencies": {
-    "live-server": "^1.2.0"
+    "live-server": "^1.2.0",
+    "nodemon": "^2.0.22"
   },
   "keywords": [
     "motivation",

@@ -1,11 +1,36 @@
-// Configuration file to store API keys and other sensitive information
-// This file should be generated during build time with real values from environment variables
+// Configuration file to load environment variables for client-side usage
+// This approach keeps API keys out of the client-side code directly
 
-window.apiConfig = {
-  // This will be replaced with actual values during build
-  OPENROUTER_API_KEY: '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'
-};
-
-// In production, this file would be generated with real values from .env
-// For security, keys should not be hardcoded in client-side JavaScript
-console.log('Config loaded. API configuration is available.');
+(function() {
+  // Create a namespace for our environment variables
+  window.env = {};
+  
+  // In production, these values would be injected during the build process
+  // by reading from actual environment variables
+  
+  // Load the API key from environment variables
+  // For GitHub Pages deployment, these would be set in the repository settings
+  // For local development, these might be served by a small server-side component
+  
+  // This function fetches environment variables from a server endpoint
+  async function loadEnvironmentVariables() {
+    try {
+      const response = await fetch('/api/env-config');
+      if (response.ok) {
+        const config = await response.json();
+        window.env = config;
+        console.log('Environment configuration loaded');
+      } else {
+        console.warn('Failed to load environment configuration');
+      }
+    } catch (error) {
+      console.error('Error loading environment configuration:', error);
+    }
+  }
+  
+  // For development fallback only - REMOVE IN PRODUCTION
+  window.env.OPENROUTER_API_KEY = 'API_KEY_PLACEHOLDER';
+  
+  // Try to load real env variables
+  loadEnvironmentVariables();
+})();

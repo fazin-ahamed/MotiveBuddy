@@ -1011,8 +1011,13 @@ async function getAIResponse(message) {
         
         console.log("Sending request to OpenRouter API with message:", message);
         
-        // Get the API key from config or fall back to a placeholder (will be replaced at build time)
-        const apiKey = window.apiConfig ? window.apiConfig.OPENROUTER_API_KEY : 'API_KEY_PLACEHOLDER';
+        // Get the API key from process.env (for server-side) or window.env (for client-side)
+        const apiKey = window.env ? window.env.OPENROUTER_API_KEY : (process.env ? process.env.OPENROUTER_API_KEY : null);
+        
+        if (!apiKey) {
+            console.error("API key not found. Please check your environment configuration.");
+            throw new Error("API key not configured");
+        }
         
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',

@@ -45,5 +45,12 @@ motivational-buddy-app
 ## Chaos Improvements
 Chaotic Improvements are welcome! Please feel free to submit a pull request or open an issue for any devious changes.
 
+## Environment Variable Setup
+
+### Local Development
+1. Create a `.env` file in the root directory with the following variables:
+   ```
+   OPENROUTER_API_KEY=your_openrouter_api_key_here
+
 ## License
 This project is licensed under the MIT License.
