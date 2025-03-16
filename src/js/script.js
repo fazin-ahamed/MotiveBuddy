@@ -1016,7 +1016,7 @@ async function getAIResponse(message) {
             headers: {
                 'Authorization': 'Bearer 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',
                 'HTTP-Referer': 'motivebuddy.netlify.app',
-                'X-Title': 'MotiveBuddy', // Optional but recommended
+                'X-Title': 'MotiveBuddy',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
