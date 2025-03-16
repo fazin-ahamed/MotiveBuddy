@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Double-check the display settings to make sure they're applied
         if(rageGameSection) rageGameSection.style.display = 'none';
-        if(aboutSection) aboutSection.style.display = 'flex';
+        if(aboutSection) rageGameSection.style.display = 'flex';
         
         // Initialize speech recognition
         if (!initializeSpeechRecognition()) {
@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Force-check visibility one more time for robustness
     if (gameCompleted) {
         if(rageGameSection) rageGameSection.style.display = 'none';
-        if(aboutSection) aboutSection.style.display = 'flex';
+        if(aboutSection) rageGameSection.style.display = 'flex';
     }
 
     // ...existing Bluetooth status code...
@@ -1009,27 +1009,25 @@ async function getAIResponse(message) {
             return;
         }
         
-        console.log("Sending request to OpenRouter API with message:", message);
+        console.log("Sending request to Groq API with message:", message);
         
         // Check for API credentials using secure handler
-        if (!window.secureAccess || !window.secureAccess.hasCredentials('openrouter')) {
+        if (!window.secureAccess || !window.secureAccess.hasCredentials('groq')) {
             console.warn("API credentials not found. Using offline responses.");
             throw new Error("API credentials not configured");
         }
         
         // Get authentication headers securely
-        const authHeaders = window.secureAccess.getAuthHeaders('openrouter');
+        const authHeaders = window.secureAccess.getAuthHeaders('groq');
         
-        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
                 ...authHeaders,
-                'Content-Type': 'application/json',
-                // Add a timeout header if the API supports it
-                'X-Request-Timeout': '8000'
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'meta-llama/llama-3.3-70b-instruct:free',
+                model: 'llama3-70b-8192',
                 messages: [
                     {
                         role: 'system',
@@ -1040,8 +1038,8 @@ async function getAIResponse(message) {
                         content: message
                     }
                 ],
-                // Add a timeout to prevent hanging requests
-                timeout: 8000
+                temperature: 0.7,
+                max_tokens: 150
             })
         });
 

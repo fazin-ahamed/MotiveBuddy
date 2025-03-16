@@ -11,7 +11,7 @@ jobs:
     permissions:
       contents: write  # This gives the workflow write permissions to the repository
     env:
-      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -27,7 +27,7 @@ jobs:
       - name: Replace API key in config.js
         run: |
           # Use a more secure approach that doesn't expose the key in process output
-          sed -i "s/__OPENROUTER_API_KEY__/$(echo $OPENROUTER_API_KEY | sed 's/[\/&]/\\&/g')/g" src/js/config.js
+          sed -i "s/__GROQ_API_KEY__/$(echo $GROQ_API_KEY | sed 's/[\/&]/\\&/g')/g" src/js/config.js
         
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
