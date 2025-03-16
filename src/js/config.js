@@ -12,10 +12,20 @@
   
   // Check if the placeholder was properly replaced during deployment
   if (placeholder === '__OPENROUTER_API_KEY__') {
-    console.error('Error: API key placeholder was not replaced during deployment.');
-    console.error('Make sure the GitHub Actions workflow is correctly configured to replace the placeholder.');
-    window.env.OPENROUTER_API_KEY = null;
+    console.log('API key placeholder not replaced, checking for local development environment');
+    
+    // Try to load from localStorage if available (for development purposes)
+    const localApiKey = localStorage.getItem('dev_openrouter_key');
+    if (localApiKey) {
+      console.log('Using API key from localStorage (development mode)');
+      window.env.OPENROUTER_API_KEY = localApiKey;
+    } else {
+      console.error('No API key found in localStorage or deployment placeholder');
+      console.error('For local development, set localStorage.dev_openrouter_key with your API key');
+      window.env.OPENROUTER_API_KEY = null;
+    }
   } else {
+    console.log('Using API key from deployment configuration');
     window.env.OPENROUTER_API_KEY = placeholder;
   }
   
@@ -24,6 +34,24 @@
     detail: { config: window.env }
   });
   document.dispatchEvent(configLoadedEvent);
+  
+  // Add development helper function to easily set the API key
+  window.setDevApiKey = function(key) {
+    if (key && typeof key === 'string') {
+      localStorage.setItem('dev_openrouter_key', key);
+      window.env.OPENROUTER_API_KEY = key;
+      console.log('Development API key set. Reload the page to apply.');
+      
+      // Re-dispatch the config event
+      const configLoadedEvent = new CustomEvent('config-loaded', {
+        detail: { config: window.env }
+      });
+      document.dispatchEvent(configLoadedEvent);
+      
+      return true;
+    }
+    return false;
+  };
   
   console.log('Environment configuration loaded');
 })();
