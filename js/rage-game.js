@@ -1,9 +1,9 @@
 const rageGameButton = document.querySelector('.rage-game-button');
 const stopGameButton = document.querySelector('.stop-game-button');
 const secretHint = document.querySelector('.secret-hint');
-let clickCount = 0;
+let hoverCount = 0; // Changed from clickCount to hoverCount
 let lastMoveTime = 0;
-let requiredClicks = 20; // Changed from time-based to click-based (20 clicks needed)
+let requiredHovers = 20; // Changed from requiredClicks to requiredHovers
 let gameTimer;
 let canMove = true;
 
@@ -29,8 +29,8 @@ document.addEventListener('DOMContentLoaded', function() {
         console.warn("Could not find rage game element");
     }
     
-    // Update the click counter display initially
-    updateClickDisplay();
+    // Update the hover counter display initially
+    updateHoverDisplay();
     
     // Position the button initially
     if (rageGameButton) {
@@ -42,10 +42,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Update the click counter display
-function updateClickDisplay() {
-    const clicksLeft = Math.max(0, requiredClicks - clickCount);
-    secretHint.textContent = `Clicks left: ${clicksLeft} clicks...`;
+// Update the hover counter display
+function updateHoverDisplay() {
+    const hoversLeft = Math.max(0, requiredHovers - hoverCount);
+    secretHint.textContent = `Hovers left: ${hoversLeft} hovers...`;
 }
 
 function moveButton() {
@@ -97,36 +97,40 @@ function moveButton() {
 if (rageGameButton) {
     rageGameButton.addEventListener('mouseover', () => {
         setTimeout(moveButton, 100);
+        
+        // Count hover and check for completion
+        hoverCount++;
+        
+        // Update display with new hover count
+        updateHoverDisplay();
+        
+        const speech = new SpeechSynthesisUtterance(`You got ${hoverCount} hover${hoverCount === 1 ? '' : 's'}! Impressive... NOT!`);
+        window.speechSynthesis.speak(speech);
+        
+        // If user manages to hover over the button 20 times, complete the game
+        if (hoverCount >= requiredHovers) {
+            completeRageGame();
+        }
     });
 
     // Handle touch events
     rageGameButton.addEventListener('touchstart', (e) => {
         e.preventDefault();
         setTimeout(moveButton, 100);
-    });
-
-    // Click handler for the rage button
-    rageGameButton.addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent event bubbling
         
-        // Make the button temporarily unable to move after clicking
-        canMove = false;
-        clickCount++;
+        // Count hover for touch as well
+        hoverCount++;
         
-        // Update display with new click count
-        updateClickDisplay();
+        // Update display with new hover count
+        updateHoverDisplay();
         
-        const speech = new SpeechSynthesisUtterance(`You got ${clickCount} click${clickCount === 1 ? '' : 's'}! Impressive... NOT!`);
-        window.speechSynthesis.speak(speech);
-        
-        // Re-enable movement after a short delay
-        setTimeout(() => { canMove = true; }, 800);
-        
-        // If user manages to click the button 20 times, complete the game
-        if (clickCount >= requiredClicks) {
+        // If user manages to hover over the button 20 times, complete the game
+        if (hoverCount >= requiredHovers) {
             completeRageGame();
         }
     });
+
+    // Remove click handler functionality as we're now using hovers
 }
 
 // Stop button functionality - it's a trick!
@@ -152,7 +156,7 @@ function completeRageGame() {
     if (gameTimer) {
         clearInterval(gameTimer);
     }
-    const speech = new SpeechSynthesisUtterance('You clicked the rage bait 20 times! Now you can interact with the demotivational buddy.');
+    const speech = new SpeechSynthesisUtterance('You hovered over the rage bait 20 times! Now you can interact with the demotivational buddy.');
     window.speechSynthesis.speak(speech);
     
     // Set cookie to remember the game was completed - use secure settings
