@@ -16,7 +16,9 @@
         if (window.env && window.env.OPENROUTER_API_KEY) {
           // Store securely
           storeSecureCredentials(window.env);
+          return true;
         }
+        return false;
       }
       return true;
     } catch (e) {
@@ -77,7 +79,14 @@
     try {
       const credentials = getSecureCredentials();
       
-      if (!credentials) return {};
+      if (!credentials) {
+        console.warn("No credentials found in secure storage");
+        // Try direct access as fallback (less secure but helps during development)
+        if (window.env && window.env.OPENROUTER_API_KEY && service === 'openrouter') {
+          return { 'Authorization': `Bearer ${window.env.OPENROUTER_API_KEY}` };
+        }
+        return {};
+      }
       
       if (service === 'openrouter') {
         // Return authentication headers for OpenRouter
@@ -89,6 +98,11 @@
       return {};
     } catch (e) {
       console.error("Error generating auth headers", e);
+      // Emergency fallback for development
+      if (window.env && window.env.OPENROUTER_API_KEY && service === 'openrouter') {
+        console.warn("Using emergency fallback auth from window.env");
+        return { 'Authorization': `Bearer ${window.env.OPENROUTER_API_KEY}` };
+      }
       return {};
     }
   };
@@ -97,7 +111,13 @@
   window.secureAccess.hasCredentials = (service) => {
     try {
       const credentials = getSecureCredentials();
-      if (!credentials) return false;
+      if (!credentials) {
+        // Try direct access as fallback
+        if (window.env && window.env.OPENROUTER_API_KEY && service === 'openrouter') {
+          return true;
+        }
+        return false;
+      }
       
       if (service === 'openrouter') {
         return !!credentials.OPENROUTER_API_KEY;
@@ -105,17 +125,41 @@
       
       return false;
     } catch (e) {
+      // Emergency fallback check for development
+      if (window.env && window.env.OPENROUTER_API_KEY && service === 'openrouter') {
+        return true;
+      }
       return false;
     }
   };
   
   // Initialize on load
-  secureStorageInit();
+  const initialized = secureStorageInit();
+  if (!initialized) {
+    console.warn("Secure storage initialization failed, will retry when config is loaded");
+  }
   
   // Add listener for config data changes
   document.addEventListener('config-loaded', (e) => {
     if (e.detail && e.detail.config) {
-      storeSecureCredentials(e.detail.config);
+      const stored = storeSecureCredentials(e.detail.config);
+      if (stored) {
+        console.log("Credentials securely stored from config event");
+      }
     }
   });
+  
+  // Add helper in development to check if API key is working
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    window.checkApiKey = function() {
+      const hasKey = window.secureAccess.hasCredentials('openrouter');
+      console.log(`API key available: ${hasKey}`);
+      if (hasKey) {
+        const headers = window.secureAccess.getAuthHeaders('openrouter');
+        console.log("Auth headers:", headers);
+        return headers && headers.Authorization && headers.Authorization.length > 20;
+      }
+      return false;
+    };
+  }
 })();
